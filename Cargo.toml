@@ -1,3 +1,12 @@
 [workspace]
 default-members = ["exporter"]
 members = ["models", "exporter"]
+
+[workspace.dependencies]
+sea-orm = { version = "0.11.2", default-features = false, features = [
+    "runtime-tokio-native-tls",
+    "macros",
+    "with-chrono",
+    "with-uuid",
+    "sqlx-mysql",
+] }
