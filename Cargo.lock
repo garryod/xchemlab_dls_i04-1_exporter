@@ -1601,6 +1601,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "sea-orm-codegen"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9bfe18e1d4a8f124235c5c7d91e907e6bd443153bb275d0be894d70cce1d95ef"
+dependencies = [
+ "heck 0.3.3",
+ "proc-macro2",
+ "quote",
+ "sea-query",
+ "syn 1.0.109",
+ "tracing",
+]
+
+[[package]]
 name = "sea-orm-macros"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1647,6 +1661,31 @@ dependencies = [
  "quote",
  "syn 1.0.109",
  "thiserror",
+]
+
+[[package]]
+name = "sea-schema"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eeb2940bb5a10bc6cd05b450ce6cd3993e27fddd7eface2becb97fc5af3a040e"
+dependencies = [
+ "futures",
+ "sea-query",
+ "sea-query-binder",
+ "sea-schema-derive",
+ "sqlx",
+]
+
+[[package]]
+name = "sea-schema-derive"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56821b7076f5096b8f726e2791ad255a99c82498e08ec477a65a96c461ff1927"
+dependencies = [
+ "heck 0.3.3",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -2569,7 +2608,11 @@ dependencies = [
  "async-stream",
  "axum",
  "sea-orm",
+ "sea-orm-codegen",
+ "sea-schema",
+ "sqlx",
  "tokio",
+ "url",
  "uuid",
 ]
 
