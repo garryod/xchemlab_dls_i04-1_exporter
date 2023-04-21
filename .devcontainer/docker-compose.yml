@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  exporter:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+    volumes:
+      - ..:/workspace:cached,Z
+    command: sleep infinity
+    environment:
+      DATABASE_URL: mysql://root:rootpassword@ispyb/ispyb_build
+
+  ispyb:
+    image: ghcr.io/diamondlightsource/ispyb-database:latest
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
