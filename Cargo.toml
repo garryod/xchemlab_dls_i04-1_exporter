@@ -1,0 +1,6 @@
+[package]
+name = "xchemlab_dls_i04-1_exporter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
