@@ -3,10 +3,10 @@ use async_graphql::{Enum, MergedObject, MergedSubscription, Schema};
 pub type RootSchema = Schema<RootQuery, RootMutation, RootSubscription>;
 
 #[derive(Debug, MergedObject, Default)]
-pub struct RootQuery();
+pub struct RootQuery;
 
 #[derive(Debug, MergedObject, Default)]
-pub struct RootMutation();
+pub struct RootMutation;
 
 #[derive(Debug, Enum, PartialEq, Eq, Clone, Copy)]
 pub enum MutationType {
@@ -15,4 +15,4 @@ pub enum MutationType {
 }
 
 #[derive(Debug, MergedSubscription, Default)]
-pub struct RootSubscription();
+pub struct RootSubscription;

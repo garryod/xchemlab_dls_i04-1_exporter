@@ -1,0 +1,30 @@
+[package]
+name = "models"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+sea-orm = { version = "0.11.2", default-features = false, features = [
+    "macros",
+    "with-chrono",
+    "with-uuid",
+    "sqlx-mysql",
+] }
+
+[build-dependencies]
+sea-orm-codegen = "0.11.2"
+sea-schema = { version = "0.11.0", default-features = false, features = [
+    "runtime-tokio-native-tls",
+    "sqlx-mysql",
+    "discovery",
+    "writer",
+] }
+sqlx = { version = "0.6.3", default-features = false, features = [
+    "runtime-tokio-native-tls",
+    "mysql",
+] }
+tokio = { version = "1.27.0", default-features = false, features = ["rt"] }
+url = "2.3.1"

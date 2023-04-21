@@ -1,6 +1,6 @@
 const DATABASE_URL_ENV_VAR: &str = "DATABASE_URL";
 
-const MODELS_PATH: &str = "src/models/";
+const MODELS_PATH: &str = "src/";
 
 const TABLES: &'static [&str] = &["Shipping", "LabContact", "Person", "Proposal", "Laboratory"];
 
@@ -52,7 +52,7 @@ fn main() {
                 true,
                 sea_orm_codegen::DateTimeCrate::Chrono,
                 None,
-                false,
+                true,
                 false,
                 false,
                 vec![],
