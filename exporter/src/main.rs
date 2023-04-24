@@ -2,11 +2,11 @@
 #[warn(missing_docs)]
 mod api;
 
-use api::{RootMutation, RootQuery, RootSchema, RootSubscription};
+use self::api::{RootMutation, RootQuery, RootSchema, RootSubscription};
 use async_graphql::{http::GraphiQLSource, Schema};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse, GraphQLSubscription};
 use axum::{
-    response::{self, IntoResponse},
+    response::{Html, IntoResponse},
     routing::get,
     Extension, Router, Server,
 };
@@ -34,7 +34,7 @@ async fn setup_api(
 }
 
 async fn graphiql() -> impl IntoResponse {
-    response::Html(
+    Html(
         GraphiQLSource::build()
             .endpoint("/")
             .subscription_endpoint("/ws")

@@ -2,9 +2,11 @@ mod person;
 mod proposals;
 mod shipment;
 
-use self::proposals::ProposalQuery;
-use self::shipment::ShipmentQuery;
-use self::{person::PersonQuery, shipment::ShipmentMutation};
+use self::{
+    proposals::ProposalQuery,
+    shipment::ShipmentQuery,
+    {person::PersonQuery, shipment::ShipmentMutation},
+};
 use async_graphql::{EmptySubscription, Enum, MergedObject, Schema};
 
 pub type RootSchema = Schema<RootQuery, RootMutation, RootSubscription>;
