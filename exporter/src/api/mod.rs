@@ -1,12 +1,14 @@
-use async_graphql::{Enum, MergedObject, MergedSubscription, Schema};
+mod person;
+
+use async_graphql::{EmptyMutation, EmptySubscription, Enum, MergedObject, Schema};
+use person::PersonQuery;
 
 pub type RootSchema = Schema<RootQuery, RootMutation, RootSubscription>;
 
 #[derive(Debug, MergedObject, Default)]
-pub struct RootQuery;
+pub struct RootQuery(PersonQuery);
 
-#[derive(Debug, MergedObject, Default)]
-pub struct RootMutation;
+pub type RootMutation = EmptyMutation;
 
 #[derive(Debug, Enum, PartialEq, Eq, Clone, Copy)]
 pub enum MutationType {
@@ -14,5 +16,4 @@ pub enum MutationType {
     Deleted,
 }
 
-#[derive(Debug, MergedSubscription, Default)]
-pub struct RootSubscription;
+pub type RootSubscription = EmptySubscription;
