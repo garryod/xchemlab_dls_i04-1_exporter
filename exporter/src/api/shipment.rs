@@ -1,5 +1,10 @@
+use crate::broker::EventBroker;
+
 use super::proposals::Proposal;
-use async_graphql::{Context, Object};
+use async_graphql::{
+    futures_util::{Stream, StreamExt},
+    Context, Object, Subscription,
+};
 use derive_more::{Deref, DerefMut, From};
 use models::{proposal, shipping};
 use sea_orm::{
@@ -57,6 +62,13 @@ impl ShipmentQuery {
 #[derive(Debug, Default)]
 pub struct ShipmentMutation;
 
+#[derive(Debug, Clone)]
+pub enum ShipmentEvent {
+    Created(Shipment),
+}
+
+static SHIPMENT_EVENT_BROKER: EventBroker<ShipmentEvent> = EventBroker::<ShipmentEvent>::new();
+
 #[Object]
 impl ShipmentMutation {
     async fn create_shipment(
@@ -102,13 +114,33 @@ impl ShipmentMutation {
             extra: NotSet,
         };
         let model = shipping::Entity::insert(model).exec(database).await?;
-        shipping::Entity::find_by_id(model.last_insert_id)
+        let created_model = shipping::Entity::find_by_id(model.last_insert_id)
             .one(database)
             .await?
             .map(Shipment::from)
             .ok_or(async_graphql::Error::new(&format!(
                 "Inserted model at {} but could not retrieve copy",
                 model.last_insert_id
-            )))
+            )))?;
+        SHIPMENT_EVENT_BROKER.publish(ShipmentEvent::Created(created_model.clone()));
+        Ok(created_model)
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct ShipmentSubscription;
+
+#[Subscription]
+impl ShipmentSubscription {
+    async fn shipment_created(&self) -> impl Stream<Item = Shipment> {
+        SHIPMENT_EVENT_BROKER
+            .subscribe()
+            .filter_map(move |event| async move {
+                if let Ok(ShipmentEvent::Created(shipment)) = event {
+                    Some(shipment)
+                } else {
+                    None
+                }
+            })
     }
 }

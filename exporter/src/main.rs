@@ -1,6 +1,7 @@
 #[forbid(unsafe_code)]
 #[warn(missing_docs)]
 mod api;
+mod broker;
 
 use self::api::{RootMutation, RootQuery, RootSchema, RootSubscription};
 use async_graphql::{http::GraphiQLSource, Schema};

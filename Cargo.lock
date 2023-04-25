@@ -690,11 +690,11 @@ dependencies = [
  "axum",
  "clap",
  "derive_more",
- "futures-channel",
  "models",
  "once_cell",
  "sea-orm",
  "tokio",
+ "tokio-stream",
  "uuid",
 ]
 
@@ -2285,6 +2285,7 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]

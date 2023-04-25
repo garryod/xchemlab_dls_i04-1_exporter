@@ -4,10 +4,10 @@ mod shipment;
 
 use self::{
     proposals::ProposalQuery,
-    shipment::ShipmentQuery,
+    shipment::{ShipmentQuery, ShipmentSubscription},
     {person::PersonQuery, shipment::ShipmentMutation},
 };
-use async_graphql::{EmptySubscription, Enum, MergedObject, Schema};
+use async_graphql::{Enum, MergedObject, MergedSubscription, Schema};
 
 pub type RootSchema = Schema<RootQuery, RootMutation, RootSubscription>;
 
@@ -23,4 +23,5 @@ pub enum MutationType {
     Deleted,
 }
 
-pub type RootSubscription = EmptySubscription;
+#[derive(Debug, MergedSubscription, Default)]
+pub struct RootSubscription(ShipmentSubscription);
