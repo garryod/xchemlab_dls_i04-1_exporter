@@ -12,7 +12,7 @@ impl<E: std::fmt::Debug + Send + Sync + Clone + 'static> EventBroker<E> {
     }
 
     pub fn publish(&self, event: E) {
-        self.0.send(event).unwrap();
+        let _ = self.0.send(event);
     }
 
     pub fn subscribe(&self) -> impl Stream<Item = Result<E, BroadcastStreamRecvError>> {
