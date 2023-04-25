@@ -2,7 +2,18 @@ const DATABASE_URL_ENV_VAR: &str = "DATABASE_URL";
 
 const MODELS_PATH: &str = "src/";
 
-const TABLES: &'static [&str] = &["Shipping", "LabContact", "Person", "Proposal", "Laboratory"];
+const TABLES: &'static [&str] = &[
+    "Shipping",
+    "LabContact",
+    "Person",
+    "Proposal",
+    "Laboratory",
+    "Dewar",
+    "BLSession",
+    "BeamLineSetup",
+    "BeamCalendar",
+    "Detector",
+];
 
 fn main() {
     tokio::runtime::Builder::new_current_thread()
