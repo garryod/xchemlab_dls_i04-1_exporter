@@ -1,6 +1,6 @@
 use super::{
     dewar::{Dewar, DewarInput, FromInputAndShippingId},
-    proposals::Proposal,
+    proposal::Proposal,
     puck::FromInputAndDewarId,
 };
 use crate::broker::EventBroker;

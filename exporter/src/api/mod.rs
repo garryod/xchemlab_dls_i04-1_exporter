@@ -1,12 +1,12 @@
 mod dewar;
 mod person;
-mod proposals;
+mod proposal;
 mod puck;
 mod shipment;
 
 use self::{
     dewar::DewarQuery,
-    proposals::ProposalQuery,
+    proposal::ProposalQuery,
     puck::PuckQuery,
     shipment::{ShipmentQuery, ShipmentSubscription},
     {person::PersonQuery, shipment::ShipmentMutation},
