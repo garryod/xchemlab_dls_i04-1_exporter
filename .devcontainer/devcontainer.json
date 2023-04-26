@@ -7,9 +7,10 @@
   "customizations": {
     "vscode": {
       "extensions": [
-		"rust-lang.rust-analyzer",
-		"tamasfe.even-better-toml"
-	]
+		    "rust-lang.rust-analyzer",
+		    "tamasfe.even-better-toml",
+		    "redhat.vscode-yaml"
+	    ]
     }
   },
   "features": {
