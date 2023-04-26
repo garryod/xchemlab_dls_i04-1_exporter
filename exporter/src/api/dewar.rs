@@ -1,11 +1,13 @@
+use super::puck::{Puck, PuckInput};
 use async_graphql::{Context, InputObject, Object};
 use derive_more::{Deref, DerefMut, From};
-use models::dewar;
+use models::{container, dewar};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryTrait, Set};
 
-#[derive(Debug, InputObject)]
+#[derive(Debug, InputObject, Clone)]
 pub struct DewarInput {
-    code: String,
+    pub code: String,
+    pub containers: Vec<ContainerInput>,
 }
 
 pub trait FromInputAndShippingId {
@@ -33,6 +35,17 @@ impl Dewar {
 
     async fn code(&self) -> &Option<String> {
         &self.code
+    }
+
+    async fn containers(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Container>> {
+        let database = ctx.data::<DatabaseConnection>()?;
+        Ok(container::Entity::find()
+            .filter(container::Column::DewarId.eq(self.dewar_id))
+            .all(database)
+            .await?
+            .into_iter()
+            .map(Container::from)
+            .collect())
     }
 }
 

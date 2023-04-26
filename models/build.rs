@@ -13,6 +13,15 @@ const TABLES: &'static [&str] = &[
     "BeamLineSetup",
     "BeamCalendar",
     "Detector",
+    "Container",
+    "ContainerRegistry",
+    "ContainerType",
+    "ExperimentType",
+    "Imager",
+    "ProcessingPipeline",
+    "ProcessingPipelineCategory",
+    "Schedule",
+    "Screen",
 ];
 
 fn main() {

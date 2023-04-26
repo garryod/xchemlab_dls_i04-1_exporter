@@ -1,4 +1,5 @@
 use super::{
+    container::FromInputAndDewarId,
     dewar::{Dewar, DewarInput, FromInputAndShippingId},
     proposals::Proposal,
 };
@@ -8,8 +9,8 @@ use async_graphql::{
     Context, Object, Subscription,
 };
 use derive_more::{Deref, DerefMut, From};
-use models::{dewar, proposal, shipping};
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryTrait, Set};
+use models::{container, dewar, proposal, shipping};
+use sea_orm::{ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, QueryTrait, Set};
 
 #[derive(Debug, Clone, From, Deref, DerefMut)]
 pub struct Shipment(shipping::Model);
@@ -105,18 +106,38 @@ impl ShipmentMutation {
         dewars
             .into_iter()
             .map(|dewar| async {
-                dewar::Entity::insert(dewar::ActiveModel::from_input_and_shipping_id(
-                    dewar,
-                    shipping_insert.last_insert_id,
-                ))
-                .exec(database)
-                .await
+                let dewar_insert =
+                    dewar::Entity::insert(dewar::ActiveModel::from_input_and_shipping_id(
+                        dewar.clone(),
+                        shipping_insert.last_insert_id,
+                    ))
+                    .exec(database)
+                    .await?;
+
+                let container_inserts = dewar
+                    .containers
+                    .into_iter()
+                    .map(|container| async {
+                        container::Entity::insert(container::ActiveModel::from_input_and_dewar_id(
+                            container,
+                            dewar_insert.last_insert_id,
+                        ))
+                        .exec(database)
+                        .await
+                    })
+                    .collect::<FuturesOrdered<_>>()
+                    .collect::<Vec<_>>()
+                    .await
+                    .into_iter()
+                    .collect::<Result<Vec<_>, DbErr>>()?;
+
+                Ok((dewar_insert, container_inserts))
             })
             .collect::<FuturesOrdered<_>>()
             .collect::<Vec<_>>()
             .await
             .into_iter()
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>, DbErr>>()?;
 
         let created_shipping = shipping::Entity::find_by_id(shipping_insert.last_insert_id)
             .one(database)
