@@ -22,6 +22,22 @@ const TABLES: &'static [&str] = &[
     "ProcessingPipelineCategory",
     "Schedule",
     "Screen",
+    "BLSample",
+    "BLSubSample",
+    "Crystal",
+    "DiffractionPlan",
+    "ScreenComponentGroup",
+    "BLSampleImage",
+    "MotorPosition",
+    "Position",
+    "PurificationColumn",
+    "Protein",
+    "BLSampleImageScore",
+    "ContainerInspection",
+    "ComponentType",
+    "InspectionType",
+    "ScheduleComponent",
+    "ConcentrationType",
 ];
 
 fn main() {

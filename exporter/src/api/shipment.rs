@@ -1,5 +1,6 @@
 use super::{
     dewar::{Dewar, DewarInput, FromInputAndShippingId},
+    pin::FromInputAndPuckId,
     proposal::Proposal,
     puck::FromInputAndDewarId,
 };
@@ -9,7 +10,7 @@ use async_graphql::{
     Context, Object, Subscription,
 };
 use derive_more::{Deref, DerefMut, From};
-use models::{container, dewar, proposal, shipping};
+use models::{bl_sample, container, dewar, proposal, shipping};
 use sea_orm::{ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, QueryTrait, Set};
 
 #[derive(Debug, Clone, From, Deref, DerefMut)]
@@ -118,12 +119,35 @@ impl ShipmentMutation {
                     .pucks
                     .into_iter()
                     .map(|puck| async {
-                        container::Entity::insert(container::ActiveModel::from_input_and_dewar_id(
-                            puck,
-                            dewar_insert.last_insert_id,
-                        ))
+                        let puck_insert = container::Entity::insert(
+                            container::ActiveModel::from_input_and_dewar_id(
+                                puck.clone(),
+                                dewar_insert.last_insert_id,
+                            ),
+                        )
                         .exec(database)
-                        .await
+                        .await?;
+
+                        let pin_inserts = puck
+                            .pins
+                            .into_iter()
+                            .map(|pin| async {
+                                bl_sample::Entity::insert(
+                                    bl_sample::ActiveModel::from_input_and_puck_id(
+                                        pin,
+                                        puck_insert.last_insert_id,
+                                    ),
+                                )
+                                .exec(database)
+                                .await
+                            })
+                            .collect::<FuturesOrdered<_>>()
+                            .collect::<Vec<_>>()
+                            .await
+                            .into_iter()
+                            .collect::<Result<Vec<_>, DbErr>>()?;
+
+                        Ok((puck_insert, pin_inserts))
                     })
                     .collect::<FuturesOrdered<_>>()
                     .collect::<Vec<_>>()

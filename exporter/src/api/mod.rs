@@ -1,11 +1,13 @@
 mod dewar;
 mod person;
+mod pin;
 mod proposal;
 mod puck;
 mod shipment;
 
 use self::{
     dewar::DewarQuery,
+    pin::PinQuery,
     proposal::ProposalQuery,
     puck::PuckQuery,
     shipment::{ShipmentQuery, ShipmentSubscription},
@@ -19,6 +21,7 @@ pub type RootSchema = Schema<RootQuery, RootMutation, RootSubscription>;
 pub struct RootQuery(
     DewarQuery,
     PersonQuery,
+    PinQuery,
     ProposalQuery,
     PuckQuery,
     ShipmentQuery,

@@ -1,11 +1,13 @@
+use super::pin::{Pin, PinInput};
 use async_graphql::{Context, InputObject, Object};
 use derive_more::{Deref, DerefMut, From};
-use models::container;
+use models::{bl_sample, container};
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryTrait, Set};
 
 #[derive(Debug, InputObject, Clone)]
 pub struct PuckInput {
     pub code: String,
+    pub pins: Vec<PinInput>,
 }
 
 pub trait FromInputAndDewarId {
@@ -34,6 +36,17 @@ impl Puck {
 
     async fn code(&self) -> &Option<String> {
         &self.code
+    }
+
+    async fn pins(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Pin>> {
+        let database = ctx.data::<DatabaseConnection>()?;
+        Ok(bl_sample::Entity::find()
+            .filter(bl_sample::Column::ContainerId.eq(self.container_id))
+            .all(database)
+            .await?
+            .into_iter()
+            .map(Pin::from)
+            .collect())
     }
 }
 
