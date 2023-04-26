@@ -1,13 +1,13 @@
-mod container;
 mod dewar;
 mod person;
 mod proposals;
+mod puck;
 mod shipment;
 
 use self::{
-    container::ContainerQuery,
     dewar::DewarQuery,
     proposals::ProposalQuery,
+    puck::PuckQuery,
     shipment::{ShipmentQuery, ShipmentSubscription},
     {person::PersonQuery, shipment::ShipmentMutation},
 };
@@ -17,10 +17,10 @@ pub type RootSchema = Schema<RootQuery, RootMutation, RootSubscription>;
 
 #[derive(Debug, MergedObject, Default)]
 pub struct RootQuery(
-    ContainerQuery,
     DewarQuery,
     PersonQuery,
     ProposalQuery,
+    PuckQuery,
     ShipmentQuery,
 );
 

@@ -7,7 +7,7 @@ use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryTr
 #[derive(Debug, InputObject, Clone)]
 pub struct DewarInput {
     pub code: String,
-    pub containers: Vec<ContainerInput>,
+    pub pucks: Vec<PuckInput>,
 }
 
 pub trait FromInputAndShippingId {
@@ -37,14 +37,14 @@ impl Dewar {
         &self.code
     }
 
-    async fn containers(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Container>> {
+    async fn pucks(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Puck>> {
         let database = ctx.data::<DatabaseConnection>()?;
         Ok(container::Entity::find()
             .filter(container::Column::DewarId.eq(self.dewar_id))
             .all(database)
             .await?
             .into_iter()
-            .map(Container::from)
+            .map(Puck::from)
             .collect())
     }
 }

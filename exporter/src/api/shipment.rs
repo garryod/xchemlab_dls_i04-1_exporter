@@ -1,7 +1,7 @@
 use super::{
-    container::FromInputAndDewarId,
     dewar::{Dewar, DewarInput, FromInputAndShippingId},
     proposals::Proposal,
+    puck::FromInputAndDewarId,
 };
 use crate::broker::EventBroker;
 use async_graphql::{
@@ -114,12 +114,12 @@ impl ShipmentMutation {
                     .exec(database)
                     .await?;
 
-                let container_inserts = dewar
-                    .containers
+                let puck_inserts = dewar
+                    .pucks
                     .into_iter()
-                    .map(|container| async {
+                    .map(|puck| async {
                         container::Entity::insert(container::ActiveModel::from_input_and_dewar_id(
-                            container,
+                            puck,
                             dewar_insert.last_insert_id,
                         ))
                         .exec(database)
@@ -131,7 +131,7 @@ impl ShipmentMutation {
                     .into_iter()
                     .collect::<Result<Vec<_>, DbErr>>()?;
 
-                Ok((dewar_insert, container_inserts))
+                Ok((dewar_insert, puck_inserts))
             })
             .collect::<FuturesOrdered<_>>()
             .collect::<Vec<_>>()
