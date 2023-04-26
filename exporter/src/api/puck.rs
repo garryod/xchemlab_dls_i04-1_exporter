@@ -1,8 +1,16 @@
 use super::pin::{Pin, PinInput};
-use async_graphql::{Context, InputObject, Object};
+use async_graphql::{
+    futures_util::{stream::FuturesOrdered, StreamExt},
+    Context, InputObject, Object,
+};
 use derive_more::{Deref, DerefMut, From};
-use models::{bl_sample, container};
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryTrait, Set};
+use models::{
+    bl_sample,
+    container::{ActiveModel, Column, Entity, Model},
+};
+use sea_orm::{
+    ColumnTrait, DatabaseConnection, DbErr, EntityTrait, InsertResult, QueryFilter, QueryTrait, Set,
+};
 
 #[derive(Debug, InputObject, Clone)]
 pub struct PuckInput {
@@ -10,11 +18,45 @@ pub struct PuckInput {
     pub pins: Vec<PinInput>,
 }
 
+impl PuckInput {
+    pub async fn insert_as_child_recursive(
+        self,
+        dewar_id: u32,
+        database: &DatabaseConnection,
+    ) -> Result<
+        (
+            InsertResult<ActiveModel>,
+            Vec<InsertResult<bl_sample::ActiveModel>>,
+        ),
+        DbErr,
+    > {
+        let insert = Entity::insert(ActiveModel {
+            dewar_id: Set(Some(dewar_id)),
+            code: Set(Some(self.code)),
+            ..Default::default()
+        })
+        .exec(database)
+        .await?;
+
+        let pin_inserts = self
+            .pins
+            .into_iter()
+            .map(|pin| pin.insert_as_child(insert.last_insert_id, database))
+            .collect::<FuturesOrdered<_>>()
+            .collect::<Vec<_>>()
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, DbErr>>()?;
+
+        Ok((insert, pin_inserts))
+    }
+}
+
 pub trait FromInputAndDewarId {
     fn from_input_and_dewar_id(input: PuckInput, dewar_id: u32) -> Self;
 }
 
-impl FromInputAndDewarId for container::ActiveModel {
+impl FromInputAndDewarId for ActiveModel {
     fn from_input_and_dewar_id(input: PuckInput, dewar_id: u32) -> Self {
         Self {
             dewar_id: Set(Some(dewar_id)),
@@ -26,7 +68,7 @@ impl FromInputAndDewarId for container::ActiveModel {
 }
 
 #[derive(Debug, Clone, From, Deref, DerefMut)]
-pub struct Puck(container::Model);
+pub struct Puck(Model);
 
 #[Object]
 impl Puck {
@@ -61,9 +103,9 @@ impl PuckQuery {
         dewar_id: Option<u32>,
     ) -> async_graphql::Result<Vec<Puck>> {
         let database = ctx.data::<DatabaseConnection>()?;
-        container::Entity::find()
+        Entity::find()
             .apply_if(dewar_id, |query, dewar_id| {
-                query.filter(container::Column::DewarId.eq(dewar_id))
+                query.filter(Column::DewarId.eq(dewar_id))
             })
             .all(database)
             .await

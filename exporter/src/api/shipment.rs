@@ -1,8 +1,6 @@
 use super::{
-    dewar::{Dewar, DewarInput, FromInputAndShippingId},
-    pin::FromInputAndPuckId,
+    dewar::{Dewar, DewarInput},
     proposal::Proposal,
-    puck::FromInputAndDewarId,
 };
 use crate::broker::EventBroker;
 use async_graphql::{
@@ -10,7 +8,7 @@ use async_graphql::{
     Context, Object, Subscription,
 };
 use derive_more::{Deref, DerefMut, From};
-use models::{bl_sample, container, dewar, proposal, shipping};
+use models::{dewar, proposal, shipping};
 use sea_orm::{ColumnTrait, DatabaseConnection, DbErr, EntityTrait, QueryFilter, QueryTrait, Set};
 
 #[derive(Debug, Clone, From, Deref, DerefMut)]
@@ -106,57 +104,7 @@ impl ShipmentMutation {
 
         dewars
             .into_iter()
-            .map(|dewar| async {
-                let dewar_insert =
-                    dewar::Entity::insert(dewar::ActiveModel::from_input_and_shipping_id(
-                        dewar.clone(),
-                        shipping_insert.last_insert_id,
-                    ))
-                    .exec(database)
-                    .await?;
-
-                let puck_inserts = dewar
-                    .pucks
-                    .into_iter()
-                    .map(|puck| async {
-                        let puck_insert = container::Entity::insert(
-                            container::ActiveModel::from_input_and_dewar_id(
-                                puck.clone(),
-                                dewar_insert.last_insert_id,
-                            ),
-                        )
-                        .exec(database)
-                        .await?;
-
-                        let pin_inserts = puck
-                            .pins
-                            .into_iter()
-                            .map(|pin| async {
-                                bl_sample::Entity::insert(
-                                    bl_sample::ActiveModel::from_input_and_puck_id(
-                                        pin,
-                                        puck_insert.last_insert_id,
-                                    ),
-                                )
-                                .exec(database)
-                                .await
-                            })
-                            .collect::<FuturesOrdered<_>>()
-                            .collect::<Vec<_>>()
-                            .await
-                            .into_iter()
-                            .collect::<Result<Vec<_>, DbErr>>()?;
-
-                        Ok((puck_insert, pin_inserts))
-                    })
-                    .collect::<FuturesOrdered<_>>()
-                    .collect::<Vec<_>>()
-                    .await
-                    .into_iter()
-                    .collect::<Result<Vec<_>, DbErr>>()?;
-
-                Ok((dewar_insert, puck_inserts))
-            })
+            .map(|dewar| dewar.insert_as_child_recursive(shipping_insert.last_insert_id, database))
             .collect::<FuturesOrdered<_>>()
             .collect::<Vec<_>>()
             .await

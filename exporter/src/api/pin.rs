@@ -1,29 +1,33 @@
 use async_graphql::{Context, InputObject, Object};
 use derive_more::{Deref, DerefMut, From};
-use models::bl_sample;
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryTrait, Set};
+use models::bl_sample::{ActiveModel, Column, Entity, Model};
+use sea_orm::{
+    ColumnTrait, DatabaseConnection, DbErr, EntityTrait, InsertResult, QueryFilter, QueryTrait, Set,
+};
 
 #[derive(Debug, InputObject, Clone)]
 pub struct PinInput {
     pub code: String,
 }
 
-pub trait FromInputAndPuckId {
-    fn from_input_and_puck_id(input: PinInput, puck_id: u32) -> Self;
-}
-
-impl FromInputAndPuckId for bl_sample::ActiveModel {
-    fn from_input_and_puck_id(input: PinInput, puck_id: u32) -> Self {
-        Self {
-            code: Set(Some(input.code)),
+impl PinInput {
+    pub async fn insert_as_child(
+        self,
+        puck_id: u32,
+        database: &DatabaseConnection,
+    ) -> Result<InsertResult<ActiveModel>, DbErr> {
+        Entity::insert(ActiveModel {
             container_id: Set(Some(puck_id)),
+            code: Set(Some(self.code)),
             ..Default::default()
-        }
+        })
+        .exec(database)
+        .await
     }
 }
 
 #[derive(Debug, Clone, From, Deref, DerefMut)]
-pub struct Pin(bl_sample::Model);
+pub struct Pin(Model);
 
 #[Object]
 impl Pin {
@@ -47,9 +51,9 @@ impl PinQuery {
         puck_id: Option<u32>,
     ) -> async_graphql::Result<Vec<Pin>> {
         let database = ctx.data::<DatabaseConnection>()?;
-        bl_sample::Entity::find()
+        Entity::find()
             .apply_if(puck_id, |query, puck_id| {
-                query.filter(bl_sample::Column::ContainerId.eq(puck_id))
+                query.filter(Column::ContainerId.eq(puck_id))
             })
             .all(database)
             .await

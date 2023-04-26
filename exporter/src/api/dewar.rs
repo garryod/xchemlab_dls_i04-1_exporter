@@ -1,8 +1,16 @@
 use super::puck::{Puck, PuckInput};
-use async_graphql::{Context, InputObject, Object};
+use async_graphql::{
+    futures_util::{stream::FuturesOrdered, StreamExt},
+    Context, InputObject, Object,
+};
 use derive_more::{Deref, DerefMut, From};
-use models::{container, dewar};
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryTrait, Set};
+use models::{
+    bl_sample, container,
+    dewar::{ActiveModel, Column, Entity, Model},
+};
+use sea_orm::{
+    ColumnTrait, DatabaseConnection, DbErr, EntityTrait, InsertResult, QueryFilter, QueryTrait, Set,
+};
 
 #[derive(Debug, InputObject, Clone)]
 pub struct DewarInput {
@@ -10,11 +18,48 @@ pub struct DewarInput {
     pub pucks: Vec<PuckInput>,
 }
 
+impl DewarInput {
+    pub async fn insert_as_child_recursive(
+        self,
+        shipment_id: u32,
+        database: &DatabaseConnection,
+    ) -> Result<
+        (
+            InsertResult<ActiveModel>,
+            Vec<(
+                InsertResult<container::ActiveModel>,
+                Vec<InsertResult<bl_sample::ActiveModel>>,
+            )>,
+        ),
+        DbErr,
+    > {
+        let insert = Entity::insert(ActiveModel {
+            shipping_id: Set(Some(shipment_id)),
+            code: Set(Some(self.code)),
+            ..Default::default()
+        })
+        .exec(database)
+        .await?;
+
+        let puck_inserts = self
+            .pucks
+            .into_iter()
+            .map(|puck| puck.insert_as_child_recursive(insert.last_insert_id, database))
+            .collect::<FuturesOrdered<_>>()
+            .collect::<Vec<_>>()
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, DbErr>>()?;
+
+        Ok((insert, puck_inserts))
+    }
+}
+
 pub trait FromInputAndShippingId {
     fn from_input_and_shipping_id(input: DewarInput, shipping_id: u32) -> Self;
 }
 
-impl FromInputAndShippingId for dewar::ActiveModel {
+impl FromInputAndShippingId for ActiveModel {
     fn from_input_and_shipping_id(input: DewarInput, shipping_id: u32) -> Self {
         Self {
             shipping_id: Set(Some(shipping_id)),
@@ -25,7 +70,7 @@ impl FromInputAndShippingId for dewar::ActiveModel {
 }
 
 #[derive(Debug, Clone, From, Deref, DerefMut)]
-pub struct Dewar(dewar::Model);
+pub struct Dewar(Model);
 
 #[Object]
 impl Dewar {
@@ -60,9 +105,9 @@ impl DewarQuery {
         shipment_id: Option<u32>,
     ) -> async_graphql::Result<Vec<Dewar>> {
         let database = ctx.data::<DatabaseConnection>()?;
-        dewar::Entity::find()
+        Entity::find()
             .apply_if(shipment_id, |query, shipment_id| {
-                query.filter(dewar::Column::ShippingId.eq(shipment_id))
+                query.filter(Column::ShippingId.eq(shipment_id))
             })
             .all(database)
             .await
