@@ -115,7 +115,7 @@ impl ShipmentMutation {
             .one(database)
             .await?
             .map(Shipment::from)
-            .ok_or(async_graphql::Error::new(&format!(
+            .ok_or(async_graphql::Error::new(format!(
                 "Inserted model at {} but could not retrieve copy",
                 shipping_insert.last_insert_id
             )))?;
