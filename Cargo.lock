@@ -1769,9 +1769,9 @@ dependencies = [
 
 [[package]]
 name = "sea-orm-codegen"
-version = "0.11.2"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9bfe18e1d4a8f124235c5c7d91e907e6bd443153bb275d0be894d70cce1d95ef"
+checksum = "11194170d6d3685aad69d5a14580b6d806b98f45068f3118d89232fac0810444"
 dependencies = [
  "heck 0.3.3",
  "proc-macro2",
