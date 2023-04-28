@@ -1,0 +1,8 @@
+# Build files
+/target
+
+# Development environment
+.devcontainer
+.git
+.github
+.gitignore
