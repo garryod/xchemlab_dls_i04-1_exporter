@@ -64,6 +64,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
       - name: Publish docs to GitHub Pages
         id: deployment
         uses: actions/github-pages@v2.0.1
